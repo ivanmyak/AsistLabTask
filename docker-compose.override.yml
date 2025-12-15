@@ -2,6 +2,7 @@ services:
   asistlabtask:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - TZ=Europe/Minsk
       - ASPNETCORE_HTTP_PORTS=5200
     ports:
-      - 5200"
+      - "5200"

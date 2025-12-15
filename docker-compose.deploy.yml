@@ -1,0 +1,25 @@
+name: asistlab-compose
+
+services:
+
+  documenthub:
+    container_name: documenthub-container
+    image: ${DOCKER_REGISTRY-}documenthub-image
+    build:
+      context: .
+      dockerfile: AsistLabTask/Dockerfile
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Minsk
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5200
+    ports:
+      - "5205:5200"
+    volumes:
+      - documenthub-archive:/app/Data/Archive
+      - documenthub-docs:/app/Data/Docs
+      
+      
+volumes:
+  documenthub-archive:
+  documenthub-docs:
