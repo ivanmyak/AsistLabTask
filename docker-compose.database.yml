@@ -10,6 +10,8 @@ services:
       POSTGRES_USER: ${DB_ADMIN_USER}
       POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+    networks:
+      - shared-net
     ports:
       - "${DB_PORT}:5432"
     volumes:
@@ -24,9 +26,14 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: postgresdb-container
       ADMINER_DEFAULT_DRIVER: pgsql
+    networks:
+      - shared-net
     ports:
       - "9090:8080"
 
       
 volumes:
   postgres_data:
+networks:
+  shared-net:
+    external: true

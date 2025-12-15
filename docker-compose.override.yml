@@ -4,5 +4,19 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - TZ=Europe/Minsk
       - ASPNETCORE_HTTP_PORTS=5200
+    env_file: ".env"
+    networks:
+      - shared-net
     ports:
       - "5200"
+    volumes:
+      - documenthub-archive:/app/Data/Archive
+      - documenthub-docs:/app/Data/Docs
+
+volumes:
+  documenthub-archive:
+  documenthub-docs:
+
+networks:
+  shared-net:
+    external: true
