@@ -1,0 +1,6 @@
+services:
+  asistlabtask:
+    image: ${DOCKER_REGISTRY-}asistlabtask
+    build:
+      context: .
+      dockerfile: AsistLabTask/Dockerfile
