@@ -1,5 +1,7 @@
 ﻿using AsistLabTask.Data;
 using AsistLabTask.Entities;
+using AsistLabTask.Interfaces;
+using AsistLabTask.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,6 +55,9 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddScoped<IStorageManager, LocalStorageManager>();
+builder.Services.AddScoped<IDocumentShareService, DocumentShareService>();
+
 
 var app = builder.Build();
 
