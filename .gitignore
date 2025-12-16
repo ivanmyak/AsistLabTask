@@ -362,6 +362,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /.env
-Data\Docs
-Data\Archive
-Data\Temp
+/AsistLabTask/Data/Docs
+/AsistLabTask/Data/Archive
+/AsistLabTask/Data/Temp
