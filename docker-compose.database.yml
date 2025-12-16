@@ -13,7 +13,7 @@ services:
     networks:
       - shared-net
     ports:
-      - "${DB_PORT}:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       
@@ -24,7 +24,7 @@ services:
     depends_on:
       - postgresdb
     environment:
-      ADMINER_DEFAULT_SERVER: postgresdb-container
+      ADMINER_DEFAULT_SERVER: postgresdb
       ADMINER_DEFAULT_DRIVER: pgsql
     networks:
       - shared-net

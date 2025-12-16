@@ -1,14 +1,14 @@
 ﻿using AsistLabTask.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace AsistLabTask.Data
 {
-    public class TaskDbContext : DbContext
+    public class TaskDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     {
-        public TaskDbContext(DbContextOptions<TaskDbContext> options)
-             : base(options) { }
+        public TaskDbContext(DbContextOptions<TaskDbContext> options) : base(options) { }
 
-        public DbSet<User> Users { get; set; } = default!;
         public DbSet<Document> Documents { get; set; } = default!;
         public DbSet<Comment> Comments { get; set; } = default!;
         public DbSet<DocumentHistoryEvent> DocumentHistoryEvents { get; set; } = default!;
@@ -51,6 +51,8 @@ namespace AsistLabTask.Data
                     .WithMany(d => d.ArchiveEvents)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
+            //UserSeed.Seed(builder);
         }
     }
 }

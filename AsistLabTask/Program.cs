@@ -2,15 +2,13 @@
 using AsistLabTask.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Quartz;
-using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//Я исользую два варианта секретов - пользовательские и докер
+// Конфигурация: сначала secrets, потом env
 builder.Configuration
-    .AddEnvironmentVariables()   // для docker (т.е. через переменные среды)
-    .AddUserSecrets<Program>();  // для локальной отладки (ну а тут мы уже работаем с пользовательскими)
+    .AddUserSecrets<Program>()
+    .AddEnvironmentVariables();
 
 // Логирование
 builder.Logging.ClearProviders();
@@ -20,28 +18,37 @@ builder.Logging.AddSimpleConsole(opt =>
     opt.IncludeScopes = false;
 });
 
+// Строка подключения
 var connectionString = builder.Configuration.GetConnectionString("AsistLabTaskPostgresDB")
-    ?? builder.Configuration["AsistLabTaskPostgresDB"] ?? throw new InvalidOperationException("Не удалось получить строку подключения!");
+    ?? builder.Configuration["AsistLabTaskPostgresDB"]
+    ?? throw new InvalidOperationException("Не удалось получить строку подключения!");
 
-string
-    host = Environment.GetEnvironmentVariable("DB_HOST") ?? builder.Configuration["DB_HOST"] ?? throw new InvalidOperationException("Не удалось получить DB_HOST!"),
-    port = Environment.GetEnvironmentVariable("DB_PORT") ?? builder.Configuration["DB_PORT"] ?? throw new InvalidOperationException("Не удалось получить DB_PORT!"),
-    dbname = Environment.GetEnvironmentVariable("DB_NAME") ?? builder.Configuration["DB_NAME"] ?? throw new InvalidOperationException("Не удалось получить DB_NAME!"),
-    username = Environment.GetEnvironmentVariable("DB_ADMIN_USER") ?? builder.Configuration["DB_ADMIN_USER"] ?? throw new InvalidOperationException("Не удалось получить DB_ADMIN_USER!"),
-    userpass = Environment.GetEnvironmentVariable("DB_ADMIN_PASSWORD") ?? builder.Configuration["DB_ADMIN_PASSWORD"] ?? throw new InvalidOperationException("Не удалось получить DB_ADMIN_PASSWORD!"),
-    goodConnetcString = connectionString.Replace("${DB_HOST}", host).Replace("${DB_PORT}", port).Replace("${DB_NAME}", dbname).Replace("${DB_ADMIN_USER}", username).Replace("${DB_ADMIN_PASSWORD}", userpass);
+string host = Environment.GetEnvironmentVariable("DB_HOST") ?? builder.Configuration["DB_HOST"] ?? throw new InvalidOperationException("Не удалось получить DB_HOST!");
+string port = Environment.GetEnvironmentVariable("DB_PORT") ?? builder.Configuration["DB_PORT"] ?? throw new InvalidOperationException("Не удалось получить DB_PORT!");
+string dbname = Environment.GetEnvironmentVariable("DB_NAME") ?? builder.Configuration["DB_NAME"] ?? throw new InvalidOperationException("Не удалось получить DB_NAME!");
+string username = Environment.GetEnvironmentVariable("DB_ADMIN_USER") ?? builder.Configuration["DB_ADMIN_USER"] ?? throw new InvalidOperationException("Не удалось получить DB_ADMIN_USER!");
+string userpass = Environment.GetEnvironmentVariable("DB_ADMIN_PASSWORD") ?? builder.Configuration["DB_ADMIN_PASSWORD"] ?? throw new InvalidOperationException("Не удалось получить DB_ADMIN_PASSWORD!");
 
+var goodConnetcString = connectionString
+    .Replace("${DB_HOST}", host)
+    .Replace("${DB_PORT}", port)
+    .Replace("${DB_NAME}", dbname)
+    .Replace("${DB_ADMIN_USER}", username)
+    .Replace("${DB_ADMIN_PASSWORD}", userpass);
 
+// DbContext
 builder.Services.AddDbContext<TaskDbContext>(opt =>
     opt.UseNpgsql(goodConnetcString));
 
-builder.Services.AddIdentityCore<User>(opt =>
+// Identity (без лишних требований к паролю)
+builder.Services.AddIdentity<User, IdentityRole<Guid>>(opt =>
 {
     opt.User.RequireUniqueEmail = true;
 })
-    .AddEntityFrameworkStores<TaskDbContext>();
+    .AddEntityFrameworkStores<TaskDbContext>()
+    .AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication();
+// Авторизация
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllersWithViews();
@@ -57,11 +64,10 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        //Попытка более подробного (на ошибки) коннекта к БД
         await db.Database.GetDbConnection().OpenAsync();
         if (db.Database.CanConnect())
         {
-            logger.LogInformation("✅ Успешное подключение к базе данных.Применяем Миграции...");
+            logger.LogInformation("✅ Успешное подключение к базе данных. Применяем миграции...");
             db.Database.Migrate();
         }
         else
@@ -73,11 +79,13 @@ using (var scope = app.Services.CreateScope())
     {
         logger.LogError(ex, "❌ Ошибка при подключении к базе данных.");
     }
-    finally { await db.Database.GetDbConnection().CloseAsync(); }
+    finally
+    {
+        await db.Database.GetDbConnection().CloseAsync();
+    }
 }
 
-
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
